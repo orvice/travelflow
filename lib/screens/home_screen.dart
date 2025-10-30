@@ -1,0 +1,259 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../services/api_service.dart';
+import 'plan_detail_screen.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _departureCityController = TextEditingController();
+  final _destinationCityController = TextEditingController();
+  int _travelDays = 7;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _departureCityController.dispose();
+    _destinationCityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _generateTravelPlan() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        final apiService = ApiService();
+        final travelPlan = await apiService.getTravelPlan(
+          travelDays: _travelDays,
+          departureCity: _departureCityController.text,
+          destinationCity: _destinationCityController.text,
+        );
+
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PlanDetailScreen(travelPlan: travelPlan),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.blue.shade400,
+              Colors.purple.shade300,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // App Title
+                  Icon(
+                    Icons.flight_takeoff,
+                    size: 80,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'TravelFlow',
+                    style: GoogleFonts.poppins(
+                      fontSize: 42,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '智能旅行规划助手',
+                    style: GoogleFonts.notoSansSc(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+
+                  // Form Card
+                  Card(
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              '开始您的旅程',
+                              style: GoogleFonts.notoSansSc(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade800,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Departure City
+                            TextFormField(
+                              controller: _departureCityController,
+                              decoration: InputDecoration(
+                                labelText: '出发城市',
+                                hintText: '例如：深圳',
+                                prefixIcon: const Icon(Icons.location_on),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey.shade50,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return '请输入出发城市';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Destination City
+                            TextFormField(
+                              controller: _destinationCityController,
+                              decoration: InputDecoration(
+                                labelText: '目的地城市',
+                                hintText: '例如：哈尔滨',
+                                prefixIcon: const Icon(Icons.place),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey.shade50,
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return '请输入目的地城市';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Travel Days Slider
+                            Text(
+                              '旅行天数：$_travelDays 天',
+                              style: GoogleFonts.notoSansSc(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            Slider(
+                              value: _travelDays.toDouble(),
+                              min: 1,
+                              max: 30,
+                              divisions: 29,
+                              label: '$_travelDays 天',
+                              onChanged: (value) {
+                                setState(() {
+                                  _travelDays = value.toInt();
+                                });
+                              },
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Generate Button
+                            SizedBox(
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: _isLoading ? null : _generateTravelPlan,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue.shade600,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 4,
+                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          const Icon(Icons.explore),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            '生成旅行计划',
+                                            style: GoogleFonts.notoSansSc(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
