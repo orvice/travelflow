@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/api_service.dart';
+import '../providers/theme_provider.dart';
 import 'plan_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -66,13 +68,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final primaryColor = themeProvider.primaryColor;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'TravelFlow',
           style: GoogleFonts.notoSansSc(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: Colors.blue.shade400,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
       body: Container(
@@ -80,7 +85,10 @@ class _HomeScreenState extends State<HomeScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.blue.shade50, Colors.purple.shade50],
+            colors: [
+              primaryColor.withOpacity(0.1),
+              primaryColor.withOpacity(0.05),
+            ],
           ),
         ),
         child: Center(
@@ -90,18 +98,17 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // App Title
-                Icon(
-                  Icons.flight_takeoff,
-                  size: 64,
-                  color: Colors.blue.shade600,
-                ),
+                Icon(Icons.flight_takeoff, size: 64, color: primaryColor),
                 const SizedBox(height: 16),
                 Text(
                   '开始您的旅程',
                   style: GoogleFonts.notoSansSc(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.grey.shade800,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -110,7 +117,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   '智能旅行规划助手',
                   style: GoogleFonts.notoSansSc(
                     fontSize: 16,
-                    color: Colors.grey.shade600,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.grey.shade300
+                            : Colors.grey.shade600,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -140,7 +150,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade50,
+                              fillColor:
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade50,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -162,7 +176,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade50,
+                              fillColor:
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade50,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -179,7 +197,11 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: GoogleFonts.notoSansSc(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade700,
+                              color:
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade300
+                                      : Colors.grey.shade700,
                             ),
                           ),
                           Slider(
@@ -188,6 +210,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             max: 30,
                             divisions: 29,
                             label: '$_travelDays 天',
+                            activeColor: primaryColor,
                             onChanged: (value) {
                               setState(() {
                                 _travelDays = value.toInt();
@@ -203,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed:
                                   _isLoading ? null : _generateTravelPlan,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue.shade600,
+                                backgroundColor: primaryColor,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),

@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'screens/main_screen.dart';
+import 'providers/theme_provider.dart';
 
-void main() {
-  runApp(const TravelFlowApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final themeProvider = ThemeProvider();
+  await themeProvider.loadTheme();
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => themeProvider,
+      child: const TravelFlowApp(),
+    ),
+  );
 }
 
 class TravelFlowApp extends StatelessWidget {
@@ -11,18 +23,25 @@ class TravelFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'TravelFlow',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.notoSansScTextTheme(),
-      ),
-      home: const MainScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'TravelFlow',
+          debugShowCheckedModeBanner: false,
+          theme: themeProvider.lightTheme.copyWith(
+            textTheme: GoogleFonts.notoSansScTextTheme(),
+          ),
+          darkTheme: themeProvider.darkTheme.copyWith(
+            textTheme: GoogleFonts.notoSansScTextTheme(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Typography.whiteCupertino
+                  : Typography.blackCupertino,
+            ),
+          ),
+          themeMode: themeProvider.themeMode,
+          home: const MainScreen(),
+        );
+      },
     );
   }
 }

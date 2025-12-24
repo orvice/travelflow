@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'home_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
+import '../providers/theme_provider.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -22,6 +24,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final primaryColor = themeProvider.primaryColor;
+
     return Scaffold(
       body: _screens[_currentIndex],
       bottomNavigationBar: Container(
@@ -41,8 +46,8 @@ class _MainScreenState extends State<MainScreen> {
               _currentIndex = index;
             });
           },
-          backgroundColor: Colors.white,
-          selectedItemColor: Colors.blue.shade600,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          selectedItemColor: primaryColor,
           unselectedItemColor: Colors.grey.shade600,
           selectedLabelStyle: GoogleFonts.notoSansSc(
             fontWeight: FontWeight.w600,
@@ -54,30 +59,21 @@ class _MainScreenState extends State<MainScreen> {
             BottomNavigationBarItem(
               icon: Icon(
                 Icons.flight_takeoff,
-                color:
-                    _currentIndex == 0
-                        ? Colors.blue.shade600
-                        : Colors.grey.shade600,
+                color: _currentIndex == 0 ? primaryColor : Colors.grey.shade600,
               ),
               label: '计划',
             ),
             BottomNavigationBarItem(
               icon: Icon(
                 Icons.history,
-                color:
-                    _currentIndex == 1
-                        ? Colors.blue.shade600
-                        : Colors.grey.shade600,
+                color: _currentIndex == 1 ? primaryColor : Colors.grey.shade600,
               ),
               label: '历史记录',
             ),
             BottomNavigationBarItem(
               icon: Icon(
                 Icons.settings,
-                color:
-                    _currentIndex == 2
-                        ? Colors.blue.shade600
-                        : Colors.grey.shade600,
+                color: _currentIndex == 2 ? primaryColor : Colors.grey.shade600,
               ),
               label: '设置',
             ),

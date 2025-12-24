@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -11,13 +13,16 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final primaryColor = themeProvider.primaryColor;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           '历史记录',
           style: GoogleFonts.notoSansSc(fontWeight: FontWeight.w600),
         ),
-        backgroundColor: Colors.blue.shade400,
+        backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
       body: Container(
@@ -25,7 +30,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.blue.shade50, Colors.purple.shade50],
+            colors: [
+              primaryColor.withOpacity(0.1),
+              primaryColor.withOpacity(0.05),
+            ],
           ),
         ),
         child: const Center(
