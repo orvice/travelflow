@@ -19,11 +19,109 @@ class _HomeScreenState extends State<HomeScreen> {
   int _travelDays = 7;
   bool _isLoading = false;
 
+  // 国内热门城市列表
+  final List<String> _popularCities = [
+    '北京',
+    '上海',
+    '广州',
+    '深圳',
+    '杭州',
+    '成都',
+    '重庆',
+    '西安',
+    '武汉',
+    '南京',
+    '天津',
+    '青岛',
+    '大连',
+    '厦门',
+    '昆明',
+    '三亚',
+    '哈尔滨',
+    '长沙',
+    '郑州',
+    '济南',
+  ];
+
   @override
   void dispose() {
     _departureCityController.dispose();
     _destinationCityController.dispose();
     super.dispose();
+  }
+
+  // 显示城市选择底部弹出菜单
+  void _showCityPicker(BuildContext context, TextEditingController controller) {
+    showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 标题栏
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.shade200, width: 1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '选择城市',
+                      style: GoogleFonts.notoSansSc(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              // 城市列表
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _popularCities.length,
+                  itemBuilder: (context, index) {
+                    final city = _popularCities[index];
+                    return ListTile(
+                      title: Text(
+                        city,
+                        style: GoogleFonts.notoSansSc(fontSize: 16),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          controller.text = city;
+                        });
+                        Navigator.pop(context, city);
+                      },
+                      trailing: Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _generateTravelPlan() async {
@@ -146,6 +244,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               labelText: '出发城市',
                               hintText: '例如：深圳',
                               prefixIcon: const Icon(Icons.location_on),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  Icons.arrow_drop_down,
+                                  color: primaryColor,
+                                ),
+                                onPressed:
+                                    () => _showCityPicker(
+                                      context,
+                                      _departureCityController,
+                                    ),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -162,6 +271,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                               return null;
                             },
+                            readOnly: true,
+                            onTap:
+                                () => _showCityPicker(
+                                  context,
+                                  _departureCityController,
+                                ),
                           ),
                           const SizedBox(height: 16),
 
@@ -172,6 +287,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               labelText: '目的地城市',
                               hintText: '例如：哈尔滨',
                               prefixIcon: const Icon(Icons.place),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  Icons.arrow_drop_down,
+                                  color: primaryColor,
+                                ),
+                                onPressed:
+                                    () => _showCityPicker(
+                                      context,
+                                      _destinationCityController,
+                                    ),
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -188,6 +314,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               }
                               return null;
                             },
+                            readOnly: true,
+                            onTap:
+                                () => _showCityPicker(
+                                  context,
+                                  _destinationCityController,
+                                ),
                           ),
                           const SizedBox(height: 24),
 
