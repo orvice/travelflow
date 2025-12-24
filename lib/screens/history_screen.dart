@@ -31,8 +31,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              primaryColor.withOpacity(0.1),
-              primaryColor.withOpacity(0.05),
+              primaryColor.withValues(alpha: 0.1),
+              primaryColor.withValues(alpha: 0.05),
             ],
           ),
         ),

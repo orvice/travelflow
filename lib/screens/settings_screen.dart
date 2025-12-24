@@ -78,10 +78,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           : null,
                   onTap: () async {
                     await themeProvider.setThemeColor(colorName);
+                    if (!context.mounted) return;
                     setState(() {
                       _currentColorName = colorName;
                     });
                     Navigator.pop(context);
+                    if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
@@ -130,10 +132,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : null,
                 onTap: () async {
                   await themeProvider.setThemeMode(ThemeMode.light);
+                  if (!context.mounted) return;
                   setState(() {
                     _currentThemeMode = ThemeMode.light;
                   });
                   Navigator.pop(context);
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -154,10 +158,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : null,
                 onTap: () async {
                   await themeProvider.setThemeMode(ThemeMode.dark);
+                  if (!context.mounted) return;
                   setState(() {
                     _currentThemeMode = ThemeMode.dark;
                   });
                   Navigator.pop(context);
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -178,10 +184,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : null,
                 onTap: () async {
                   await themeProvider.setThemeMode(ThemeMode.system);
+                  if (!context.mounted) return;
                   setState(() {
                     _currentThemeMode = ThemeMode.system;
                   });
                   Navigator.pop(context);
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
@@ -226,8 +234,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              themeProvider.primaryColor.withOpacity(0.1),
-              themeProvider.primaryColor.withOpacity(0.05),
+              themeProvider.primaryColor.withValues(alpha: 0.1),
+              themeProvider.primaryColor.withValues(alpha: 0.05),
             ],
           ),
         ),
@@ -425,8 +433,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return '黑暗模式';
       case ThemeMode.system:
         return '跟随系统';
-      default:
-        return '未知';
     }
   }
 }
