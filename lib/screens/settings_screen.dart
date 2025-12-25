@@ -244,10 +244,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
+        color: Colors.white.withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.25),
+          color: Colors.white.withValues(alpha: 0.35),
           width: 1,
         ),
       ),
@@ -415,7 +415,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
 
-          // 半透明遮罩层，优化内容可读性（降低透明度）
+          // 半透明遮罩层，优化内容可读性（降低透明度 - 提高可见性）
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
@@ -423,9 +423,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Colors.black.withValues(alpha: 0.05),
-                    Colors.black.withValues(alpha: 0.1),
-                    Colors.black.withValues(alpha: 0.15),
+                    Colors.black.withValues(alpha: 0.2),
+                    Colors.black.withValues(alpha: 0.3),
+                    Colors.black.withValues(alpha: 0.4),
                   ],
                   stops: const [0.0, 0.7, 1.0],
                 ),
@@ -433,7 +433,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          // 自定义标题栏（融入背景）- 降低透明度
+          // 自定义标题栏（融入背景）- 降低透明度 - 提高可见性
           Positioned(
             top: 0,
             left: 0,
@@ -449,8 +449,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
+                      Colors.black.withValues(alpha: 0.5),
                       Colors.black.withValues(alpha: 0.3),
-                      Colors.black.withValues(alpha: 0.1),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.6, 1.0],
@@ -496,18 +496,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 8), // 顶部额外间距
-                  // 主题设置卡片 - 半透明玻璃效果（提高透明度）
+                  // 主题设置卡片 - 半透明玻璃效果（提高透明度 - 增强可见性）
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: Colors.white.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
+                        color: Colors.white.withValues(alpha: 0.45),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
+                          color: Colors.black.withValues(alpha: 0.4),
                           blurRadius: 15,
                           offset: const Offset(0, 6),
                         ),
@@ -541,18 +541,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 16),
 
-                  // 关于应用卡片 - 半透明玻璃效果（提高透明度）
+                  // 关于应用卡片 - 半透明玻璃效果（提高透明度 - 增强可见性）
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.25),
+                      color: Colors.white.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.35),
+                        color: Colors.white.withValues(alpha: 0.45),
                         width: 1,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
+                          color: Colors.black.withValues(alpha: 0.4),
                           blurRadius: 15,
                           offset: const Offset(0, 6),
                         ),
