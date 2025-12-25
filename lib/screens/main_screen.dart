@@ -15,6 +15,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  late PageController _pageController;
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -23,12 +24,34 @@ class _MainScreenState extends State<MainScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final primaryColor = themeProvider.primaryColor;
 
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        children: _screens,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -59,99 +82,125 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            selectedItemColor: Colors.white,
-            unselectedItemColor: Colors.white.withValues(alpha: 0.6),
-            selectedLabelStyle: GoogleFonts.notoSansSc(
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-              shadows: [
-                Shadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 2,
-                  offset: const Offset(0, 1),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildAnimatedTabButton(
+                  index: 0,
+                  icon: Icons.flight_takeoff,
+                  label: '计划',
+                  primaryColor: primaryColor,
+                ),
+                _buildAnimatedTabButton(
+                  index: 1,
+                  icon: Icons.history,
+                  label: '历史记录',
+                  primaryColor: primaryColor,
+                ),
+                _buildAnimatedTabButton(
+                  index: 2,
+                  icon: Icons.settings,
+                  label: '设置',
+                  primaryColor: primaryColor,
                 ),
               ],
             ),
-            unselectedLabelStyle: GoogleFonts.notoSansSc(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.6),
-            ),
-            type: BottomNavigationBarType.fixed,
-            items: [
-              BottomNavigationBarItem(
-                icon: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        _currentIndex == 0
-                            ? primaryColor.withValues(alpha: 0.3)
-                            : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.flight_takeoff,
-                    color:
-                        _currentIndex == 0
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.6),
-                    size: 22,
-                  ),
-                ),
-                label: '计划',
-              ),
-              BottomNavigationBarItem(
-                icon: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        _currentIndex == 1
-                            ? primaryColor.withValues(alpha: 0.3)
-                            : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.history,
-                    color:
-                        _currentIndex == 1
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.6),
-                    size: 22,
-                  ),
-                ),
-                label: '历史记录',
-              ),
-              BottomNavigationBarItem(
-                icon: Container(
-                  decoration: BoxDecoration(
-                    color:
-                        _currentIndex == 2
-                            ? primaryColor.withValues(alpha: 0.3)
-                            : Colors.transparent,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: Icon(
-                    Icons.settings,
-                    color:
-                        _currentIndex == 2
-                            ? Colors.white
-                            : Colors.white.withValues(alpha: 0.6),
-                    size: 22,
-                  ),
-                ),
-                label: '设置',
-              ),
-            ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedTabButton({
+    required int index,
+    required IconData icon,
+    required String label,
+    required Color primaryColor,
+  }) {
+    final isSelected = _currentIndex == index;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _currentIndex = index;
+        });
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      },
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color:
+              isSelected
+                  ? primaryColor.withValues(alpha: 0.3)
+                  : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border:
+              isSelected
+                  ? Border.all(
+                    color: primaryColor.withValues(alpha: 0.5),
+                    width: 1,
+                  )
+                  : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AnimatedScale(
+              scale: isSelected ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutBack,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  return ScaleTransition(
+                    scale: animation,
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                child: Icon(
+                  key: ValueKey('$index-icon'),
+                  icon,
+                  color:
+                      isSelected
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.6),
+                  size: 24,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: GoogleFonts.notoSansSc(
+                fontSize: isSelected ? 11 : 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color:
+                    isSelected
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.6),
+                shadows:
+                    isSelected
+                        ? [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
+                          ),
+                        ]
+                        : [],
+              ),
+              child: Text(label),
+            ),
+          ],
         ),
       ),
     );
