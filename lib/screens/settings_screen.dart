@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/wallpaper_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -13,11 +15,29 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _currentColorName = '蓝色';
   ThemeMode _currentThemeMode = ThemeMode.light;
+  String? _wallpaperPath;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentSettings();
+    _loadWallpaper();
+  }
+
+  // 加载壁纸
+  Future<void> _loadWallpaper() async {
+    try {
+      final wallpaperService = WallpaperService();
+      final cachedPath = await wallpaperService.getCachedWallpaper();
+
+      if (cachedPath != null && mounted) {
+        setState(() {
+          _wallpaperPath = cachedPath;
+        });
+      }
+    } catch (e) {
+      // 壁纸加载失败，保持默认背景
+    }
   }
 
   Future<void> _loadCurrentSettings() async {
@@ -224,22 +244,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: Colors.white.withValues(alpha: 0.25),
           width: 1,
         ),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: ListTile(
-        leading: Icon(icon, color: Colors.white, size: 20),
+        leading: Icon(
+          icon,
+          color: Colors.white,
+          size: 20,
+          shadows: [
+            Shadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
         title: Text(
           title,
           style: GoogleFonts.notoSansSc(
             fontSize: 16,
             fontWeight: FontWeight.w500,
             color: Colors.white,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
           ),
         ),
         subtitle:
@@ -248,7 +286,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   value,
                   style: GoogleFonts.notoSansSc(
                     fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: Colors.white.withValues(alpha: 0.85),
+                    fontWeight: FontWeight.w500,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 1,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
                   ),
                 )
                 : null,
@@ -256,8 +302,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             showChevron
                 ? Icon(
                   Icons.chevron_right,
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: Colors.white.withValues(alpha: 0.8),
                   size: 20,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.5),
+                      blurRadius: 1,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 )
                 : null,
         onTap: onTap,
@@ -272,14 +325,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: Colors.white.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
       ),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white, size: 20),
+          Icon(
+            icon,
+            color: Colors.white,
+            size: 20,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
           const SizedBox(width: 8),
           Text(
             title,
@@ -289,8 +353,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               color: Colors.white,
               shadows: [
                 Shadow(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  blurRadius: 2,
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 3,
                   offset: const Offset(0, 1),
                 ),
               ],
@@ -311,28 +375,65 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // 移除传统 AppBar，使用自定义标题栏
       body: Stack(
         children: [
-          // 渐变背景
+          // 壁纸背景
+          if (_wallpaperPath != null)
+            Positioned.fill(
+              child: Image.file(
+                File(_wallpaperPath!),
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // 如果图片加载失败，显示渐变背景
+                  return Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          primaryColor.withValues(alpha: 0.1),
+                          primaryColor.withValues(alpha: 0.05),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            )
+          else
+            // 默认渐变背景
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      primaryColor.withValues(alpha: 0.1),
+                      primaryColor.withValues(alpha: 0.05),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+          // 半透明遮罩层，优化内容可读性（降低透明度）
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
-                    primaryColor.withValues(alpha: 0.1),
-                    primaryColor.withValues(alpha: 0.05),
+                    Colors.black.withValues(alpha: 0.05),
+                    Colors.black.withValues(alpha: 0.1),
+                    Colors.black.withValues(alpha: 0.15),
                   ],
+                  stops: const [0.0, 0.7, 1.0],
                 ),
               ),
             ),
           ),
 
-          // 半透明遮罩层，确保内容可读
-          Positioned.fill(
-            child: Container(color: Colors.black.withValues(alpha: 0.2)),
-          ),
-
-          // 自定义标题栏（融入背景）
+          // 自定义标题栏（融入背景）- 降低透明度
           Positioned(
             top: 0,
             left: 0,
@@ -348,8 +449,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.5),
-                      Colors.black.withValues(alpha: 0.2),
+                      Colors.black.withValues(alpha: 0.3),
+                      Colors.black.withValues(alpha: 0.1),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.6, 1.0],
@@ -395,13 +496,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 8), // 顶部额外间距
-                  // 主题设置卡片 - 半透明玻璃效果
+                  // 主题设置卡片 - 半透明玻璃效果（提高透明度）
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(alpha: 0.35),
                         width: 1,
                       ),
                       boxShadow: [
@@ -440,13 +541,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 16),
 
-                  // 关于应用卡片 - 半透明玻璃效果
+                  // 关于应用卡片 - 半透明玻璃效果（提高透明度）
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: Colors.white.withValues(alpha: 0.25),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(alpha: 0.35),
                         width: 1,
                       ),
                       boxShadow: [
