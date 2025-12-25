@@ -317,9 +317,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withValues(alpha: 0.4),
+                      Colors.black.withValues(alpha: 0.5),
+                      Colors.black.withValues(alpha: 0.2),
                       Colors.transparent,
                     ],
+                    stops: const [0.0, 0.6, 1.0],
                   ),
                 ),
                 child: Row(
@@ -332,6 +334,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icons.flight_takeoff,
                           color: Colors.white,
                           size: 28,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              blurRadius: 2,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
                         ),
                         const SizedBox(width: 12),
                         Text(
@@ -342,7 +351,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: Colors.white,
                             shadows: [
                               Shadow(
-                                color: Colors.black.withValues(alpha: 0.5),
+                                color: Colors.black.withValues(alpha: 0.6),
                                 blurRadius: 4,
                                 offset: const Offset(0, 2),
                               ),
@@ -354,8 +363,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     // 刷新按钮
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: Colors.white.withValues(alpha: 0.25),
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
                       ),
                       child: IconButton(
                         icon:
@@ -382,13 +395,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // 内容区域
           Positioned.fill(
-            top: 80, // 为标题栏留出空间
+            top: 90, // 增加顶部间距，为标题栏留出更多空间
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    const SizedBox(height: 10), // 顶部额外间距
                     // App Title - 融入背景风格
                     Container(
                       decoration: BoxDecoration(

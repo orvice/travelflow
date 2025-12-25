@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/travel_plan.dart';
+import '../providers/theme_provider.dart';
 
 class PlanDetailScreen extends StatelessWidget {
   final TravelPlan travelPlan;
@@ -9,133 +11,192 @@ class PlanDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final primaryColor = themeProvider.primaryColor;
+
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // App Bar
-          SliverAppBar(
-            expandedHeight: 200,
-            floating: false,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                travelPlan.destination,
-                style: GoogleFonts.notoSansSc(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.blue.shade400,
-                      Colors.purple.shade300,
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.luggage,
-                        size: 60,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${travelPlan.duration} 天行程',
-                        style: GoogleFonts.notoSansSc(
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+      // 移除传统 AppBar，使用自定义标题栏
+      body: Stack(
+        children: [
+          // 渐变背景
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    primaryColor.withValues(alpha: 0.1),
+                    primaryColor.withValues(alpha: 0.05),
+                  ],
                 ),
               ),
             ),
           ),
 
-          // Content
-          SliverToBoxAdapter(
-            child: Padding(
+          // 半透明遮罩层，确保内容可读
+          Positioned.fill(
+            child: Container(color: Colors.black.withValues(alpha: 0.2)),
+          ),
+
+          // 自定义标题栏（融入背景）
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.5),
+                      Colors.black.withValues(alpha: 0.2),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.6, 1.0],
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    // 返回按钮
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    // 标题
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            travelPlan.destination,
+                            style: GoogleFonts.notoSansSc(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '${travelPlan.duration} 天行程',
+                            style: GoogleFonts.notoSansSc(
+                              fontSize: 14,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 内容区域
+          Positioned.fill(
+            top: 90, // 增加顶部间距，为标题栏留出更多空间
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Overview Section
+                  const SizedBox(height: 8), // 顶部额外间距
+                  // 行程概览 - 半透明玻璃效果
                   _buildSectionCard(
                     icon: Icons.info_outline,
                     title: '行程概览',
+                    primaryColor: primaryColor,
                     child: Text(
                       travelPlan.overview,
                       style: GoogleFonts.notoSansSc(
                         fontSize: 15,
                         height: 1.6,
-                        color: Colors.grey.shade700,
+                        color: Colors.white,
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Daily Plans
-                  _buildSectionTitle('每日行程', Icons.calendar_today),
+                  // 每日行程标题
+                  _buildSectionTitle(
+                    '每日行程',
+                    Icons.calendar_today,
+                    primaryColor,
+                  ),
                   const SizedBox(height: 12),
-                  ...travelPlan.dailyPlan.map((day) => _buildDayCard(day)),
+                  ...travelPlan.dailyPlan.map(
+                    (day) => _buildDayCard(day, primaryColor),
+                  ),
 
-                  // Transportation
+                  // 交通信息
                   if (travelPlan.transportation.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _buildSectionCard(
                       icon: Icons.directions_car,
                       title: '交通信息',
+                      primaryColor: primaryColor,
                       child: Text(
                         travelPlan.transportation,
                         style: GoogleFonts.notoSansSc(
                           fontSize: 15,
                           height: 1.6,
-                          color: Colors.grey.shade700,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ],
 
-                  // Tips
+                  // 旅行提示
                   if (travelPlan.tips.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _buildSectionCard(
                       icon: Icons.lightbulb_outline,
                       title: '旅行提示',
+                      primaryColor: primaryColor,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: travelPlan.tips.map((tip) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  size: 20,
-                                  color: Colors.green.shade600,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    tip,
-                                    style: GoogleFonts.notoSansSc(
-                                      fontSize: 14,
-                                      color: Colors.grey.shade700,
+                        children:
+                            travelPlan.tips.map((tip) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle,
+                                      size: 20,
+                                      color: Colors.green.shade300,
                                     ),
-                                  ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        tip,
+                                        style: GoogleFonts.notoSansSc(
+                                          fontSize: 14,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            }).toList(),
                       ),
                     ),
                   ],
@@ -150,20 +211,45 @@ class PlanDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.blue.shade600),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: GoogleFonts.notoSansSc(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey.shade800,
-          ),
+  Widget _buildSectionTitle(String title, IconData icon, Color primaryColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1,
         ),
-      ],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: GoogleFonts.notoSansSc(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -171,11 +257,23 @@ class PlanDetailScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required Widget child,
+    required Color primaryColor,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -184,14 +282,21 @@ class PlanDetailScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, color: Colors.blue.shade600),
+                Icon(icon, color: Colors.white),
                 const SizedBox(width: 8),
                 Text(
                   title,
                   style: GoogleFonts.notoSansSc(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -204,13 +309,24 @@ class PlanDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDayCard(DailyPlan day) {
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+  Widget _buildDayCard(DailyPlan day, Color primaryColor) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -223,16 +339,27 @@ class PlanDetailScreen extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade600,
+                    color: Colors.white.withValues(alpha: 0.25),
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      width: 2,
+                    ),
                   ),
                   child: Center(
                     child: Text(
                       '${day.day}',
-                      style: const TextStyle(
+                      style: GoogleFonts.notoSansSc(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -243,7 +370,14 @@ class PlanDetailScreen extends StatelessWidget {
                   style: GoogleFonts.notoSansSc(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey.shade800,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -275,7 +409,11 @@ class PlanDetailScreen extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.hotel, size: 18, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.hotel,
+                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -286,7 +424,7 @@ class PlanDetailScreen extends StatelessWidget {
                           style: GoogleFonts.notoSansSc(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.grey.shade700,
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -294,7 +432,7 @@ class PlanDetailScreen extends StatelessWidget {
                           day.accommodation,
                           style: GoogleFonts.notoSansSc(
                             fontSize: 14,
-                            color: Colors.grey.shade600,
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
@@ -319,14 +457,14 @@ class PlanDetailScreen extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, size: 18, color: Colors.grey.shade600),
+            Icon(icon, size: 18, color: Colors.white.withValues(alpha: 0.8)),
             const SizedBox(width: 8),
             Text(
               title,
               style: GoogleFonts.notoSansSc(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
+                color: Colors.white,
               ),
             ),
           ],
@@ -340,8 +478,8 @@ class PlanDetailScreen extends StatelessWidget {
               children: [
                 Text(
                   '• ',
-                  style: TextStyle(
-                    color: Colors.blue.shade600,
+                  style: GoogleFonts.notoSansSc(
+                    color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -351,7 +489,7 @@ class PlanDetailScreen extends StatelessWidget {
                     item,
                     style: GoogleFonts.notoSansSc(
                       fontSize: 14,
-                      color: Colors.grey.shade600,
+                      color: Colors.white.withValues(alpha: 0.9),
                       height: 1.5,
                     ),
                   ),
@@ -364,4 +502,3 @@ class PlanDetailScreen extends StatelessWidget {
     );
   }
 }
-
