@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'screens/splash_screen.dart';
 import 'screens/main_screen.dart';
 import 'providers/theme_provider.dart';
 
@@ -39,7 +40,7 @@ class TravelFlowApp extends StatelessWidget {
             ),
           ),
           themeMode: themeProvider.themeMode,
-          home: const MainScreen(),
+          home: const SplashScreen(),
         );
       },
     );
