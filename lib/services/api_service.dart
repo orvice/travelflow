@@ -35,8 +35,6 @@ class ApiService {
         return TravelPlan.fromJson(data['result']);
       } else {
         final responseBody = response.data.toString();
-        print('Response status: ${response.statusCode}');
-        print('Response body: $responseBody');
         throw Exception(
           'Failed to load travel plan: ${response.statusCode}, Body: $responseBody',
         );
@@ -44,17 +42,13 @@ class ApiService {
     } on DioException catch (e) {
       if (e.response != null) {
         final responseBody = e.response?.data.toString() ?? 'No response body';
-        print('Response status: ${e.response?.statusCode}');
-        print('Response body: $responseBody');
         throw Exception(
           'Failed to load travel plan: ${e.response?.statusCode}, Body: $responseBody',
         );
       } else {
-        print('Dio error: ${e.message}');
         throw Exception('Error: ${e.message}');
       }
     } catch (e) {
-      print('Unexpected error: $e');
       throw Exception('Error: $e');
     }
   }
