@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'home_screen.dart';
 import 'history_screen.dart';
+import 'map_screen.dart';
 import 'settings_screen.dart';
 import '../providers/theme_provider.dart';
 
@@ -19,6 +20,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
+    const MapScreen(),
     const HistoryScreen(),
     const SettingsScreen(),
   ];
@@ -95,12 +97,18 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 _buildAnimatedTabButton(
                   index: 1,
+                  icon: Icons.map,
+                  label: '地图',
+                  primaryColor: primaryColor,
+                ),
+                _buildAnimatedTabButton(
+                  index: 2,
                   icon: Icons.history,
                   label: '历史记录',
                   primaryColor: primaryColor,
                 ),
                 _buildAnimatedTabButton(
-                  index: 2,
+                  index: 3,
                   icon: Icons.settings,
                   label: '设置',
                   primaryColor: primaryColor,
