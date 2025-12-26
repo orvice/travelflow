@@ -33,4 +33,4 @@ jobs:
           aws_bucket: ${{ secrets.AWS_BUCKET }}
           source_dir: 'build/app/outputs/flutter-apk'
           destination_dir: 'apk/travelflow'
-          endpoint: 'https://s3.us-west-1.wasabisys.com'
+          endpoint: 'https://s3.eu-central-1.wasabisys.com'
