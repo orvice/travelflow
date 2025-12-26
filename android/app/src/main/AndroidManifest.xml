@@ -1,11 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Network permissions for Grafana API access -->
+    <!-- Network permissions for TravelFlow API access -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     
     <application
-        android:label="grafana"
+        android:label="travelflow"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
