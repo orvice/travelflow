@@ -3,11 +3,37 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/travel_plan.dart';
 import '../providers/theme_provider.dart';
+import '../services/history_service.dart';
 
-class PlanDetailScreen extends StatelessWidget {
+class PlanDetailScreen extends StatefulWidget {
   final TravelPlan travelPlan;
 
   const PlanDetailScreen({super.key, required this.travelPlan});
+
+  @override
+  State<PlanDetailScreen> createState() => _PlanDetailScreenState();
+}
+
+class _PlanDetailScreenState extends State<PlanDetailScreen> {
+  bool _isSaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _saveToHistory();
+  }
+
+  Future<void> _saveToHistory() async {
+    try {
+      final historyService = HistoryService();
+      await historyService.addTravelPlan(widget.travelPlan);
+      setState(() {
+        _isSaved = true;
+      });
+    } catch (e) {
+      print('Error saving to history: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +117,7 @@ class PlanDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            travelPlan.destination,
+                            widget.travelPlan.destination,
                             style: GoogleFonts.notoSansSc(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -106,7 +132,7 @@ class PlanDetailScreen extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${travelPlan.duration} 天行程',
+                            '${widget.travelPlan.duration} 天行程',
                             style: GoogleFonts.notoSansSc(
                               fontSize: 14,
                               color: Colors.white.withValues(alpha: 0.8),
@@ -115,6 +141,13 @@ class PlanDetailScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                    // 保存状态指示
+                    if (_isSaved)
+                      const Icon(
+                        Icons.check_circle,
+                        color: Colors.green,
+                        size: 24,
+                      ),
                   ],
                 ),
               ),
@@ -136,7 +169,7 @@ class PlanDetailScreen extends StatelessWidget {
                     title: '行程概览',
                     primaryColor: primaryColor,
                     child: Text(
-                      travelPlan.overview,
+                      widget.travelPlan.overview,
                       style: GoogleFonts.notoSansSc(
                         fontSize: 15,
                         height: 1.6,
@@ -153,19 +186,19 @@ class PlanDetailScreen extends StatelessWidget {
                     primaryColor,
                   ),
                   const SizedBox(height: 12),
-                  ...travelPlan.dailyPlan.map(
+                  ...widget.travelPlan.dailyPlan.map(
                     (day) => _buildDayCard(day, primaryColor),
                   ),
 
                   // 交通信息
-                  if (travelPlan.transportation.isNotEmpty) ...[
+                  if (widget.travelPlan.transportation.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _buildSectionCard(
                       icon: Icons.directions_car,
                       title: '交通信息',
                       primaryColor: primaryColor,
                       child: Text(
-                        travelPlan.transportation,
+                        widget.travelPlan.transportation,
                         style: GoogleFonts.notoSansSc(
                           fontSize: 15,
                           height: 1.6,
@@ -176,7 +209,7 @@ class PlanDetailScreen extends StatelessWidget {
                   ],
 
                   // 旅行提示
-                  if (travelPlan.tips.isNotEmpty) ...[
+                  if (widget.travelPlan.tips.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _buildSectionCard(
                       icon: Icons.lightbulb_outline,
@@ -185,7 +218,7 @@ class PlanDetailScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children:
-                            travelPlan.tips.map((tip) {
+                            widget.travelPlan.tips.map((tip) {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 8.0),
                                 child: Row(
@@ -510,7 +543,7 @@ class PlanDetailScreen extends StatelessWidget {
               ],
             ),
           );
-        }),
+        }).toList(),
       ],
     );
   }

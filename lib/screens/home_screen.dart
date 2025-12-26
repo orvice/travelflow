@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/wallpaper_service.dart';
 import '../providers/theme_provider.dart';
+import '../models/travel_plan.dart';
 import 'plan_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -220,6 +221,18 @@ class _HomeScreenState extends State<HomeScreen> {
           destinationCity: _destinationCityController.text,
         );
 
+        // 创建带有ID和时间戳的新旅行计划
+        final planWithMetadata = TravelPlan(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          destination: travelPlan.destination,
+          duration: travelPlan.duration,
+          overview: travelPlan.overview,
+          dailyPlan: travelPlan.dailyPlan,
+          transportation: travelPlan.transportation,
+          tips: travelPlan.tips,
+          timestamp: DateTime.now(),
+        );
+
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -228,7 +241,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PlanDetailScreen(travelPlan: travelPlan),
+              builder:
+                  (context) => PlanDetailScreen(travelPlan: planWithMetadata),
             ),
           );
         }
@@ -499,15 +513,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          width: 1,
+                        ),
                       ),
                       child: Text(
-                        '智能旅行规划助手',
+                        '输入您的旅行信息，生成个性化行程',
                         style: GoogleFonts.notoSansSc(
-                          fontSize: 18,
+                          fontSize: 16,
                           color: Colors.white,
+                          fontWeight: FontWeight.w500,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withValues(alpha: 0.5),
+                              color: Colors.black.withValues(alpha: 0.6),
                               blurRadius: 4,
                               offset: const Offset(0, 1),
                             ),
@@ -516,271 +535,178 @@ class _HomeScreenState extends State<HomeScreen> {
                         textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: 40),
 
-                    // Form Card - 半透明玻璃效果（移除BackdropFilter，提高透明度）
+                    const SizedBox(height: 30),
+
+                    // 表单容器 - 半透明玻璃效果
                     Container(
+                      padding: const EdgeInsets.all(20.0),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.35),
-                          width: 1.5,
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.25),
-                            blurRadius: 25,
-                            offset: const Offset(0, 10),
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              // Departure City（提高透明度）
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.25),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.35),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            // 出发城市输入框
+                            _buildInputField(
+                              controller: _departureCityController,
+                              label: '出发城市',
+                              icon: Icons.flight_takeoff,
+                              onTap:
+                                  () => _showCityPicker(
+                                    context,
+                                    _departureCityController,
                                   ),
-                                ),
-                                child: TextFormField(
-                                  controller: _departureCityController,
-                                  style: GoogleFonts.notoSansSc(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                  decoration: InputDecoration(
-                                    labelText: '出发城市',
-                                    labelStyle: GoogleFonts.notoSansSc(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                    ),
-                                    hintText: '例如：深圳',
-                                    hintStyle: GoogleFonts.notoSansSc(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.6,
-                                      ),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.location_on,
-                                      color: Colors.white,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        Icons.arrow_drop_down,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed:
-                                          () => _showCityPicker(
-                                            context,
-                                            _departureCityController,
-                                          ),
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return '请输入出发城市';
-                                    }
-                                    return null;
-                                  },
-                                  readOnly: true,
-                                  onTap:
-                                      () => _showCityPicker(
-                                        context,
-                                        _departureCityController,
-                                      ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
+                            ),
+                            const SizedBox(height: 16),
 
-                              // Destination City（提高透明度）
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.25),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.35),
+                            // 目的城市输入框
+                            _buildInputField(
+                              controller: _destinationCityController,
+                              label: '目的城市',
+                              icon: Icons.location_on,
+                              onTap:
+                                  () => _showCityPicker(
+                                    context,
+                                    _destinationCityController,
                                   ),
-                                ),
-                                child: TextFormField(
-                                  controller: _destinationCityController,
-                                  style: GoogleFonts.notoSansSc(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                  ),
-                                  decoration: InputDecoration(
-                                    labelText: '目的地城市',
-                                    labelStyle: GoogleFonts.notoSansSc(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                    ),
-                                    hintText: '例如：哈尔滨',
-                                    hintStyle: GoogleFonts.notoSansSc(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.6,
-                                      ),
-                                    ),
-                                    prefixIcon: Icon(
-                                      Icons.place,
-                                      color: Colors.white,
-                                    ),
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        Icons.arrow_drop_down,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed:
-                                          () => _showCityPicker(
-                                            context,
-                                            _destinationCityController,
-                                          ),
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 16,
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return '请输入目的地城市';
-                                    }
-                                    return null;
-                                  },
-                                  readOnly: true,
-                                  onTap:
-                                      () => _showCityPicker(
-                                        context,
-                                        _destinationCityController,
-                                      ),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
+                            ),
+                            const SizedBox(height: 16),
 
-                              // Travel Days Slider（提高透明度）
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
+                            // 旅行天数选择
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
                                   color: Colors.white.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.25),
-                                  ),
+                                  width: 1,
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '旅行天数：$_travelDays 天',
-                                      style: GoogleFonts.notoSansSc(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
                                         color: Colors.white,
-                                        shadows: [
-                                          Shadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.5,
-                                            ),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 1),
-                                          ),
-                                        ],
+                                        size: 20,
                                       ),
-                                    ),
-                                    Slider(
-                                      value: _travelDays.toDouble(),
-                                      min: 1,
-                                      max: 30,
-                                      divisions: 29,
-                                      label: '$_travelDays 天',
-                                      activeColor: Colors.white,
-                                      inactiveColor: Colors.white.withValues(
-                                        alpha: 0.3,
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '旅行天数',
+                                        style: GoogleFonts.notoSansSc(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                      thumbColor: Colors.white,
-                                      onChanged: (value) {
-                                        setState(() {
-                                          _travelDays = value.toInt();
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-
-                              // Generate Button
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: primaryColor.withValues(
-                                        alpha: 0.4,
+                                      const Spacer(),
+                                      Text(
+                                        '$_travelDays 天',
+                                        style: GoogleFonts.notoSansSc(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
                                       ),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 6),
-                                    ),
-                                  ],
-                                ),
-                                child: ElevatedButton(
-                                  onPressed:
-                                      _isLoading ? null : _generateTravelPlan,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: primaryColor,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    elevation: 6,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 18,
-                                    ),
+                                    ],
                                   ),
-                                  child:
-                                      _isLoading
-                                          ? const SizedBox(
-                                            height: 24,
-                                            width: 24,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                          : Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(Icons.explore, size: 22),
-                                              const SizedBox(width: 10),
-                                              Text(
-                                                '生成旅行计划',
-                                                style: GoogleFonts.notoSansSc(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                ),
+                                  const SizedBox(height: 12),
+                                  Slider(
+                                    value: _travelDays.toDouble(),
+                                    min: 1,
+                                    max: 14,
+                                    divisions: 13,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _travelDays = value.toInt();
+                                      });
+                                    },
+                                    activeColor: Colors.white.withValues(
+                                      alpha: 0.8,
+                                    ),
+                                    inactiveColor: Colors.white.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    thumbColor: Colors.white,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 24),
+
+                            // 生成按钮
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed:
+                                    _isLoading ? null : _generateTravelPlan,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white.withValues(
+                                    alpha: 0.9,
+                                  ),
+                                  foregroundColor: Colors.black87,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  elevation: 8,
+                                  shadowColor: Colors.black.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                ),
+                                child:
+                                    _isLoading
+                                        ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                                  Colors.black87,
+                                                ),
+                                          ),
+                                        )
+                                        : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.auto_awesome,
+                                              color: Colors.black87,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              '生成旅行计划',
+                                              style: GoogleFonts.notoSansSc(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -790,6 +716,54 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: TextFormField(
+        controller: controller,
+        style: GoogleFonts.notoSansSc(fontSize: 16, color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: GoogleFonts.notoSansSc(
+            color: Colors.white.withValues(alpha: 0.8),
+            fontSize: 14,
+          ),
+          prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.9)),
+          suffixIcon: Icon(
+            Icons.arrow_drop_down,
+            color: Colors.white.withValues(alpha: 0.8),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          filled: false,
+        ),
+        readOnly: true,
+        onTap: onTap,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return '请输入$label';
+          }
+          return null;
+        },
       ),
     );
   }
