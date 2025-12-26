@@ -1,9 +1,7 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../services/wallpaper_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -16,29 +14,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _currentColorName = '蓝色';
   ThemeMode _currentThemeMode = ThemeMode.light;
   String _currentLanguage = '中文';
-  String? _wallpaperPath;
 
   @override
   void initState() {
     super.initState();
     _loadCurrentSettings();
-    _loadWallpaper();
-  }
-
-  // 加载壁纸
-  Future<void> _loadWallpaper() async {
-    try {
-      final wallpaperService = WallpaperService();
-      final cachedPath = await wallpaperService.getCachedWallpaper();
-
-      if (cachedPath != null && mounted) {
-        setState(() {
-          _wallpaperPath = cachedPath;
-        });
-      }
-    } catch (e) {
-      // 壁纸加载失败，保持默认背景
-    }
   }
 
   Future<void> _loadCurrentSettings() async {
@@ -306,42 +286,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required VoidCallback onTap,
     bool showChevron = false,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.35),
-          width: 1,
-        ),
-      ),
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: Colors.white,
-          size: 20,
-          shadows: [
-            Shadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
+        leading: Icon(icon, size: 20),
         title: Text(
           title,
           style: GoogleFonts.notoSansSc(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: Colors.white,
-            shadows: [
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
           ),
         ),
         subtitle:
@@ -350,33 +305,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   value,
                   style: GoogleFonts.notoSansSc(
                     fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontWeight: FontWeight.w500,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        blurRadius: 1,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 )
                 : null,
-        trailing:
-            showChevron
-                ? Icon(
-                  Icons.chevron_right,
-                  color: Colors.white.withValues(alpha: 0.8),
-                  size: 20,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      blurRadius: 1,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                )
-                : null,
+        trailing: showChevron ? Icon(Icons.chevron_right, size: 20) : null,
         onTap: onTap,
       ),
     );
@@ -384,44 +317,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // 辅助方法：构建分组标题
   Widget _buildGroupTitle(String title, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 1,
-          ),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: Colors.white,
-            size: 20,
-            shadows: [
-              Shadow(
-                color: Colors.black.withValues(alpha: 0.5),
-                blurRadius: 2,
-                offset: const Offset(0, 1),
-              ),
-            ],
-          ),
+          Icon(icon, size: 20),
           const SizedBox(width: 8),
           Text(
             title,
             style: GoogleFonts.notoSansSc(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
-              shadows: [
-                Shadow(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -431,288 +338,101 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final colorName = _currentColorName;
-    final primaryColor = themeProvider.primaryColor;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      // 移除传统 AppBar，使用自定义标题栏
-      body: Stack(
-        children: [
-          // 壁纸背景
-          if (_wallpaperPath != null)
-            Positioned.fill(
-              child: Image.file(
-                File(_wallpaperPath!),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  // 如果图片加载失败，显示渐变背景
-                  return Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          primaryColor.withValues(alpha: 0.1),
-                          primaryColor.withValues(alpha: 0.05),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            )
-          else
-            // 默认渐变背景
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      primaryColor.withValues(alpha: 0.1),
-                      primaryColor.withValues(alpha: 0.05),
-                    ],
-                  ),
-                ),
-              ),
+      // 使用 Material 3 风格的 AppBar
+      appBar: AppBar(
+        title: Text(
+          '设置',
+          style: GoogleFonts.notoSansSc(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
+        elevation: 0,
+      ),
+      body: Container(
+        // 使用当前主题的背景色
+        color: colorScheme.surface,
+        child: ListView(
+          children: [
+            // 主题设置
+            _buildGroupTitle('主题设置', Icons.palette),
+            _buildSettingItem(
+              icon: Icons.color_lens,
+              title: '主题颜色',
+              value: _currentColorName,
+              showChevron: true,
+              onTap: _showThemeColorDialog,
+            ),
+            _buildSettingItem(
+              icon: Icons.dark_mode,
+              title: '主题模式',
+              value:
+                  _currentThemeMode == ThemeMode.light
+                      ? '明亮模式'
+                      : _currentThemeMode == ThemeMode.dark
+                      ? '黑暗模式'
+                      : '跟随系统',
+              showChevron: true,
+              onTap: _showThemeModeDialog,
             ),
 
-          // 半透明遮罩层，优化内容可读性（降低透明度 - 提高可见性）
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withValues(alpha: 0.2),
-                    Colors.black.withValues(alpha: 0.3),
-                    Colors.black.withValues(alpha: 0.4),
-                  ],
-                  stops: const [0.0, 0.7, 1.0],
-                ),
-              ),
+            // 通用设置
+            _buildGroupTitle('通用设置', Icons.settings),
+            _buildSettingItem(
+              icon: Icons.language,
+              title: '语言',
+              value: _currentLanguage,
+              showChevron: true,
+              onTap: _showLanguageDialog,
             ),
-          ),
 
-          // 自定义标题栏（融入背景）- 降低透明度 - 提高可见性
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.5),
-                      Colors.black.withValues(alpha: 0.3),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.6, 1.0],
-                  ),
-                ),
-                child: Row(
+            // 应用信息
+            _buildGroupTitle('关于', Icons.info),
+            Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              elevation: 1,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 返回按钮
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
-                    ),
-                    const SizedBox(width: 8),
-                    // 标题
                     Text(
-                      '设置',
+                      'TravelFlow',
                       style: GoogleFonts.notoSansSc(
-                        fontSize: 24,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '版本: 1.0.0',
+                      style: GoogleFonts.notoSansSc(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '智能旅行规划助手',
+                      style: GoogleFonts.notoSansSc(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ),
 
-          // 内容区域
-          Positioned.fill(
-            top: 90, // 增加顶部间距，为标题栏留出更多空间
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 8), // 顶部额外间距
-                  // 主题设置卡片 - 半透明玻璃效果（提高透明度 - 增强可见性）
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.4),
-                          blurRadius: 15,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGroupTitle('主题设置', Icons.color_lens),
-
-                        // 主题颜色
-                        _buildSettingItem(
-                          icon: Icons.color_lens_outlined,
-                          title: '主题颜色',
-                          value: colorName,
-                          onTap: _showThemeColorDialog,
-                          showChevron: true,
-                        ),
-
-                        // 主题模式
-                        _buildSettingItem(
-                          icon: Icons.dark_mode_outlined,
-                          title: '主题模式',
-                          value: _getThemeModeText(_currentThemeMode),
-                          onTap: _showThemeModeDialog,
-                          showChevron: true,
-                        ),
-
-                        // 语言设置
-                        _buildSettingItem(
-                          icon: Icons.language_outlined,
-                          title: '语言',
-                          value: _currentLanguage,
-                          onTap: _showLanguageDialog,
-                          showChevron: true,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // 关于应用卡片 - 半透明玻璃效果（提高透明度 - 增强可见性）
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        width: 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.4),
-                          blurRadius: 15,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildGroupTitle('关于应用', Icons.info),
-
-                        // 关于 TravelFlow
-                        _buildSettingItem(
-                          icon: Icons.info_outline,
-                          title: '关于 TravelFlow',
-                          value: 'v1.0.0',
-                          onTap: () {
-                            showAboutDialog(
-                              context: context,
-                              barrierColor: Colors.black.withValues(alpha: 0.6),
-                              applicationName: 'TravelFlow',
-                              applicationVersion: '1.0.0',
-                              applicationLegalese: '© 2026 TravelFlow',
-                              children: [
-                                const SizedBox(height: 16),
-                                Text(
-                                  '智能旅行规划助手，让您的旅行更加轻松愉快。',
-                                  style: GoogleFonts.notoSansSc(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-
-                        // 隐私政策
-                        _buildSettingItem(
-                          icon: Icons.privacy_tip_outlined,
-                          title: '隐私政策',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  '隐私政策页面开发中...',
-                                  style: GoogleFonts.notoSansSc(),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-
-                        // 使用帮助
-                        _buildSettingItem(
-                          icon: Icons.help_outline,
-                          title: '使用帮助',
-                          onTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  '使用帮助页面开发中...',
-                                  style: GoogleFonts.notoSansSc(),
-                                ),
-                              ),
-                            );
-                          },
-                          showChevron: true,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
-  }
-
-  String _getThemeModeText(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return '明亮模式';
-      case ThemeMode.dark:
-        return '黑暗模式';
-      case ThemeMode.system:
-        return '跟随系统';
-    }
   }
 }
