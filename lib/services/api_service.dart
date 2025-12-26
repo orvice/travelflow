@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
 import '../models/travel_plan.dart';
+import '../services/theme_service.dart';
 
 class ApiService {
   static const String baseUrl = 'https://api.lovec.at/v1/workflows';
 
   final Dio _dio = Dio();
+  final ThemeService _themeService = ThemeService();
 
   ApiService() {
     _dio.options.baseUrl = baseUrl;
@@ -19,6 +21,9 @@ class ApiService {
     required String destinationCity,
   }) async {
     try {
+      // 获取配置的语言
+      final language = await _themeService.getApiLanguage();
+
       final response = await _dio.post(
         '/travelPlanFlow',
         data: {
@@ -26,6 +31,7 @@ class ApiService {
             'travel_days': travelDays,
             'departure_city': departureCity,
             'destination_city': destinationCity,
+            'language': language,
           },
         },
       );

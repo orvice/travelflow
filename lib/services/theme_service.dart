@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class ThemeService {
   static const String _themeColorKey = 'theme_color';
   static const String _themeModeKey = 'theme_mode';
+  static const String _languageKey = 'language';
 
   // 可选的主题颜色
   static final Map<String, Color> themeColors = {
@@ -15,6 +16,16 @@ class ThemeService {
     '粉色': Colors.pink,
     '青色': Colors.cyan,
     '黄色': Colors.yellow,
+  };
+
+  // 可选的语言
+  static final Map<String, String> languages = {
+    '中文': 'Chinese',
+    'English': 'English',
+    '日本語': 'Japanese',
+    'Español': 'Spanish',
+    'Français': 'French',
+    'Deutsch': 'German',
   };
 
   // 保存主题颜色
@@ -56,5 +67,28 @@ class ThemeService {
   // 获取所有颜色名称
   List<String> getColorNames() {
     return themeColors.keys.toList();
+  }
+
+  // 保存语言
+  Future<void> saveLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_languageKey, language);
+  }
+
+  // 获取保存的语言
+  Future<String> getLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_languageKey) ?? '中文';
+  }
+
+  // 获取API语言代码
+  Future<String> getApiLanguage() async {
+    final languageName = await getLanguage();
+    return languages[languageName] ?? 'Chinese';
+  }
+
+  // 获取所有语言名称
+  List<String> getLanguageNames() {
+    return languages.keys.toList();
   }
 }

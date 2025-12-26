@@ -15,6 +15,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   String _currentColorName = '蓝色';
   ThemeMode _currentThemeMode = ThemeMode.light;
+  String _currentLanguage = '中文';
   String? _wallpaperPath;
 
   @override
@@ -46,6 +47,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _currentColorName = colorName;
       _currentThemeMode = themeProvider.themeMode;
+      _currentLanguage = themeProvider.language;
     });
   }
 
@@ -222,6 +224,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               ),
             ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('取消', style: GoogleFonts.notoSansSc()),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showLanguageDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(
+            '选择语言',
+            style: GoogleFonts.notoSansSc(fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: themeProvider.availableLanguages.length,
+              itemBuilder: (context, index) {
+                final languageName = themeProvider.availableLanguages[index];
+                final isSelected = languageName == _currentLanguage;
+
+                return ListTile(
+                  title: Text(
+                    languageName,
+                    style: GoogleFonts.notoSansSc(
+                      fontWeight:
+                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                  ),
+                  trailing:
+                      isSelected
+                          ? const Icon(Icons.check, color: Colors.green)
+                          : null,
+                  onTap: () async {
+                    await themeProvider.setLanguage(languageName);
+                    if (!context.mounted) return;
+                    setState(() {
+                      _currentLanguage = languageName;
+                    });
+                    Navigator.pop(context);
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('语言已更新', style: GoogleFonts.notoSansSc()),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
           actions: [
             TextButton(
@@ -533,6 +597,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           title: '主题模式',
                           value: _getThemeModeText(_currentThemeMode),
                           onTap: _showThemeModeDialog,
+                          showChevron: true,
+                        ),
+
+                        // 语言设置
+                        _buildSettingItem(
+                          icon: Icons.language_outlined,
+                          title: '语言',
+                          value: _currentLanguage,
+                          onTap: _showLanguageDialog,
                           showChevron: true,
                         ),
                       ],
