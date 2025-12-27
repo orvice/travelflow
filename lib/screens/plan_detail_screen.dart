@@ -543,7 +543,7 @@ class _PlanDetailScreenState extends State<PlanDetailScreen> {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
