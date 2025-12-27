@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/theme_provider.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -278,6 +279,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  // 打开项目主页
+  Future<void> _openProjectHomepage() async {
+    final url = Uri.parse('https://travelflow.orz.ee/');
+    final canLaunch = await canLaunchUrl(url);
+
+    if (!canLaunch) {
+      if (!context.mounted) return;
+      // 使用局部变量避免在 mounted 检查后使用 context
+      final localContext = context;
+      ScaffoldMessenger.of(localContext).showSnackBar(
+        SnackBar(
+          content: Text('无法打开链接: $url', style: GoogleFonts.notoSansSc()),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    await launchUrl(url, mode: LaunchMode.externalApplication);
+  }
+
   // 辅助方法：构建设置项
   Widget _buildSettingItem({
     required IconData icon,
@@ -427,6 +449,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+            ),
+
+            // 项目主页链接
+            _buildSettingItem(
+              icon: Icons.link,
+              title: '项目主页',
+              value: 'https://travelflow.orz.ee/',
+              showChevron: true,
+              onTap: _openProjectHomepage,
             ),
 
             const SizedBox(height: 20),
