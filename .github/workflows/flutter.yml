@@ -24,6 +24,13 @@ jobs:
           channel: stable
           flutter-version-file: pubspec.yaml
       - run: flutter pub get
+        
+      - run: |
+          cp lib/secrets_example.dart lib/secrets.dart
+          cp android/sample.properties android/key.properties
+          sed -i "s/password_holder/${{ secrets.KEY_PASSWORD }}/g" android/key.properties
+          echo "${{ secrets.KEY_DATA }}" | base64 --decode > /tmp/upload-keystore.jks
+          
       - run: make build
       - run: flutter build appbundle --no-tree-shake-icons
       - uses: shallwefootball/s3-upload-action@master
