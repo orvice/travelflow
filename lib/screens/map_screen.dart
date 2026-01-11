@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:uuid/uuid.dart';
+import '../models/location_marker.dart';
+import '../services/location_service.dart';
+import '../widgets/marker_dialog.dart';
+import '../widgets/favorites_panel.dart';
+import '../widgets/detail_panel.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -11,98 +17,233 @@ class MapScreen extends StatefulWidget {
 
 class _MapScreenState extends State<MapScreen> {
   final MapController _mapController = MapController();
-  List<Marker> _markers = [];
+  final LocationService _locationService = LocationService();
+  final Uuid _uuid = const Uuid();
+  
+  List<LocationMarker> _locationMarkers = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // 添加一些示例标记点
-    _addSampleMarkers();
+    _loadMarkers();
   }
 
-  void _addSampleMarkers() {
-    _markers = [
-      Marker(
-        point: const LatLng(39.9042, 116.4074), // 北京
-        width: 80,
-        height: 80,
-        child: GestureDetector(
-          onTap: () {
-            _showLocationInfo('北京', const LatLng(39.9042, 116.4074));
-          },
-          child: const Icon(
-            Icons.location_on,
-            color: Colors.red,
-            size: 40,
-            shadows: [
-              Shadow(
-                color: Colors.black54,
-                blurRadius: 4,
-                offset: Offset(2, 2),
-              ),
-            ],
+  Future<void> _loadMarkers() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final markers = await _locationService.getAllMarkers();
+      setState(() {
+        _locationMarkers = markers;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('加载标记失败: $e'),
+            backgroundColor: Colors.red,
           ),
-        ),
-      ),
-      Marker(
-        point: const LatLng(31.2304, 121.4737), // 上海
-        width: 80,
-        height: 80,
-        child: GestureDetector(
-          onTap: () {
-            _showLocationInfo('上海', const LatLng(31.2304, 121.4737));
-          },
-          child: const Icon(
-            Icons.location_on,
-            color: Colors.blue,
-            size: 40,
-            shadows: [
-              Shadow(
-                color: Colors.black54,
-                blurRadius: 4,
-                offset: Offset(2, 2),
-              ),
-            ],
-          ),
-        ),
-      ),
-      Marker(
-        point: const LatLng(22.3193, 114.1694), // 香港
-        width: 80,
-        height: 80,
-        child: GestureDetector(
-          onTap: () {
-            _showLocationInfo('香港', const LatLng(22.3193, 114.1694));
-          },
-          child: const Icon(
-            Icons.location_on,
-            color: Colors.green,
-            size: 40,
-            shadows: [
-              Shadow(
-                color: Colors.black54,
-                blurRadius: 4,
-                offset: Offset(2, 2),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ];
+        );
+      }
+    }
   }
 
-  void _showLocationInfo(String name, LatLng position) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          '$name: ${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}',
+  List<Marker> _buildMapMarkers() {
+    return _locationMarkers.map((locationMarker) {
+      return Marker(
+        point: LatLng(locationMarker.latitude, locationMarker.longitude),
+        width: 80,
+        height: 80,
+        child: GestureDetector(
+          onTap: () => _showDetailPanel(locationMarker),
+          child: Icon(
+            locationMarker.isFavorite ? Icons.star : Icons.location_on,
+            color: locationMarker.isFavorite ? Colors.amber : Colors.red,
+            size: 40,
+            shadows: const [
+              Shadow(
+                color: Colors.black54,
+                blurRadius: 4,
+                offset: Offset(2, 2),
+              ),
+            ],
+          ),
         ),
-        backgroundColor: Colors.blue,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 2),
-      ),
+      );
+    }).toList();
+  }
+
+  Future<void> _handleLongPress(TapPosition tapPosition, LatLng position) async {
+    final result = await showMarkerDialog(
+      context: context,
+      position: position,
+    );
+
+    if (result != null) {
+      final (name, notes) = result;
+      final now = DateTime.now();
+      final newMarker = LocationMarker(
+        id: _uuid.v4(),
+        name: name,
+        notes: notes,
+        latitude: position.latitude,
+        longitude: position.longitude,
+        isFavorite: false,
+        createdAt: now,
+        updatedAt: now,
+      );
+
+      try {
+        await _locationService.addMarker(newMarker);
+        await _loadMarkers();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('已添加标记: $name'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('添加标记失败: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _showDetailPanel(LocationMarker marker) async {
+    await showDetailPanel(
+      context: context,
+      marker: marker,
+      onEdit: () => _editMarker(marker),
+      onDelete: () => _deleteMarker(marker.id),
+      onToggleFavorite: () => _toggleFavorite(marker.id),
+    );
+  }
+
+  Future<void> _editMarker(LocationMarker marker) async {
+    final result = await showMarkerDialog(
+      context: context,
+      marker: marker,
+    );
+
+    if (result != null) {
+      final (name, notes) = result;
+      final updatedMarker = marker.copyWith(
+        name: name,
+        notes: notes,
+        updatedAt: DateTime.now(),
+      );
+
+      try {
+        await _locationService.updateMarker(updatedMarker);
+        await _loadMarkers();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('已更新标记: $name'),
+              backgroundColor: Colors.blue,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('更新标记失败: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteMarker(String id) async {
+    try {
+      await _locationService.deleteMarker(id);
+      await _loadMarkers();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('已删除标记'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('删除标记失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite(String id) async {
+    try {
+      await _locationService.toggleFavorite(id);
+      await _loadMarkers();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('更新收藏状态失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showFavoritesPanel() async {
+    final favorites = _locationMarkers.where((m) => m.isFavorite).toList();
+    
+    final selectedMarker = await showFavoritesPanel(
+      context: context,
+      favorites: favorites,
+      onDelete: (id) async {
+        await _toggleFavorite(id);
+      },
+    );
+
+    if (selectedMarker != null) {
+      _centerOnLocation(selectedMarker);
+    }
+  }
+
+  void _centerOnLocation(LocationMarker marker) {
+    _mapController.move(
+      LatLng(marker.latitude, marker.longitude),
+      14,
     );
   }
 
@@ -205,7 +346,7 @@ class _MapScreenState extends State<MapScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                '点击地图上的标记可以查看详细位置信息',
+                                '长按地图添加标记，点击标记查看详情',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color:
@@ -279,6 +420,7 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final favoriteCount = _locationMarkers.where((m) => m.isFavorite).length;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -314,6 +456,54 @@ class _MapScreenState extends State<MapScreen> {
               },
             ),
             actions: [
+              // Favorites button
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white10 : Colors.black12,
+                  shape: BoxShape.circle,
+                ),
+                child: Stack(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.favorite,
+                        size: 20,
+                        color: favoriteCount > 0 
+                            ? Colors.red 
+                            : (isDark ? Colors.white : Colors.black87),
+                      ),
+                      onPressed: _showFavoritesPanel,
+                    ),
+                    if (favoriteCount > 0)
+                      Positioned(
+                        right: 6,
+                        top: 6,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$favoriteCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              // Info button
               Container(
                 margin: const EdgeInsets.only(right: 16),
                 decoration: BoxDecoration(
@@ -347,6 +537,7 @@ class _MapScreenState extends State<MapScreen> {
               interactionOptions: const InteractionOptions(
                 flags: InteractiveFlag.all,
               ),
+              onLongPress: _handleLongPress,
             ),
             children: [
               TileLayer(
@@ -355,10 +546,18 @@ class _MapScreenState extends State<MapScreen> {
                 subdomains: const ['a', 'b', 'c'],
                 tileProvider: NetworkTileProvider(),
               ),
-              MarkerLayer(markers: _markers),
+              MarkerLayer(markers: _buildMapMarkers()),
             ],
           ),
-          // 控制按钮
+          // Loading indicator
+          if (_isLoading)
+            Container(
+              color: Colors.black26,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          // Control buttons
           Positioned(
             right: 16,
             bottom: 100,
@@ -401,7 +600,7 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
-          // 底部信息栏
+          // Bottom info bar
           Positioned(
             left: 16,
             right: 16,
@@ -449,7 +648,7 @@ class _MapScreenState extends State<MapScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'OpenStreetMap',
+                          '${_locationMarkers.length} 个标记',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
@@ -457,7 +656,7 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                         ),
                         Text(
-                          '点击标记查看位置信息',
+                          '长按地图添加标记',
                           style: TextStyle(
                             fontSize: 11,
                             color: isDark ? Colors.white70 : Colors.black54,
@@ -472,16 +671,27 @@ class _MapScreenState extends State<MapScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.15),
+                      color: Colors.amber.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(
-                      '免费',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.green.shade700,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.star,
+                          size: 14,
+                          color: Colors.amber.shade700,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$favoriteCount',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.amber.shade700,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
