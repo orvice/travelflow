@@ -12,7 +12,7 @@ class ApiService {
     _dio.options.baseUrl = baseUrl;
     _dio.options.headers['Content-Type'] = 'application/json; charset=utf-8';
     _dio.options.connectTimeout = const Duration(seconds: 30);
-    _dio.options.receiveTimeout = const Duration(seconds: 30);
+    _dio.options.receiveTimeout = const Duration(seconds: 230);
   }
 
   Future<TravelPlan> getTravelPlan({
